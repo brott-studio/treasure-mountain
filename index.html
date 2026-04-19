@@ -1525,7 +1525,7 @@
       blades.length = 0;
       const w = img.clientWidth, h = img.clientHeight;
       if (!w || !h) return;
-      const n = 140;
+      const n = 700;
       for (let i = 0; i < n; i++) {
         const el = document.createElement("div");
         el.className = "grass-blade";
@@ -1910,8 +1910,8 @@
 
     // Overlay a floating needle on top of the drawn compass art.
     // Compass center in the zone art is roughly 45% x, 58% y (of the cropped image).
-    const COMPASS_CX = 0.45;
-    const COMPASS_CY = 0.58;
+    const COMPASS_CX = 0.44;
+    const COMPASS_CY = 0.45;
 
     const overlay = document.createElement("div");
     overlay.className = "compass-needle-overlay";
