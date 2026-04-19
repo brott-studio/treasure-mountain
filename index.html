@@ -846,84 +846,50 @@
   }
 
   function waterLap() {
-    // A layered "gentle lap against a hull" sound:
-    //  1) low-pass noise swell that rises then ebbs (the body of the wave)
-    //  2) a mid band-pass shimmer (the frothy top of the wave hitting wood)
-    //  3) a small tuned "glub" — slow pitch-down sine for that underwater belly
-    //  4) a tiny droplet plink at the tail for sparkle
+    // Calm, gentle beach/lake lap. No booms, no big dynamics — just quiet water.
+    // Soft brownian-noise whisper with a slow filter breath; nothing else.
     if (!audioReady || !audioCtx) return;
     const t0 = audioCtx.currentTime;
-    const dur = 1.1;
+    const dur = 1.4;
 
-    // ---- 1) Low noise swell (hull body)
     const bufLen = Math.floor(audioCtx.sampleRate * dur);
     const buf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
     const data = buf.getChannelData(0);
-    // brownian-ish noise (integrates white → low-freq heavy, sounds like water)
+    // Heavily integrated noise → very low-frequency, smooth, shh-like
     let last = 0;
     for (let i = 0; i < data.length; i++) {
       const w = Math.random() * 2 - 1;
-      last = (last + 0.04 * w) * 0.995;
-      data[i] = last * 6.0;
+      last = (last + 0.02 * w) * 0.997;
+      data[i] = last * 3.0;
     }
+
     const src = audioCtx.createBufferSource();
     src.buffer = buf;
-    const lp = audioCtx.createBiquadFilter();
-    lp.type = "lowpass";
-    // filter opens as wave swells, closes as it recedes
-    lp.frequency.setValueAtTime(350, t0);
-    lp.frequency.linearRampToValueAtTime(900, t0 + 0.15);
-    lp.frequency.exponentialRampToValueAtTime(260, t0 + dur);
-    lp.Q.value = 0.7;
+
+    // Gentle bandpass centered in the "calm water" range (400–900Hz).
+    // No big filter sweeps — just a slow breath so it feels alive but never sharp.
+    const bp = audioCtx.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.frequency.setValueAtTime(550, t0);
+    bp.frequency.linearRampToValueAtTime(700, t0 + 0.5);
+    bp.frequency.linearRampToValueAtTime(500, t0 + dur);
+    bp.Q.value = 0.9;
+
+    // High-shelf cut so there's no hiss, no sharp edges
+    const hs = audioCtx.createBiquadFilter();
+    hs.type = "highshelf";
+    hs.frequency.value = 1200;
+    hs.gain.value = -12;
+
+    // Soft envelope: slow in, slow out, modest peak (≤4dB below previous)
     const g = audioCtx.createGain();
     g.gain.setValueAtTime(0, t0);
-    g.gain.linearRampToValueAtTime(0.38, t0 + 0.18);
-    g.gain.linearRampToValueAtTime(0.22, t0 + 0.5);
+    g.gain.linearRampToValueAtTime(0.14, t0 + 0.35);
+    g.gain.linearRampToValueAtTime(0.10, t0 + 0.9);
     g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
-    src.connect(lp).connect(g).connect(audioCtx.destination);
+
+    src.connect(bp).connect(hs).connect(g).connect(audioCtx.destination);
     src.start(t0); src.stop(t0 + dur);
-
-    // ---- 2) Mid shimmer (frothy top)
-    const buf2 = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.55), audioCtx.sampleRate);
-    const d2 = buf2.getChannelData(0);
-    for (let i = 0; i < d2.length; i++) d2[i] = (Math.random() * 2 - 1) * 0.5;
-    const src2 = audioCtx.createBufferSource();
-    src2.buffer = buf2;
-    const bp2 = audioCtx.createBiquadFilter();
-    bp2.type = "bandpass";
-    bp2.frequency.setValueAtTime(1500, t0 + 0.05);
-    bp2.frequency.exponentialRampToValueAtTime(600, t0 + 0.55);
-    bp2.Q.value = 1.8;
-    const g2 = audioCtx.createGain();
-    g2.gain.setValueAtTime(0, t0 + 0.05);
-    g2.gain.linearRampToValueAtTime(0.14, t0 + 0.12);
-    g2.gain.exponentialRampToValueAtTime(0.001, t0 + 0.55);
-    src2.connect(bp2).connect(g2).connect(audioCtx.destination);
-    src2.start(t0 + 0.05); src2.stop(t0 + 0.6);
-
-    // ---- 3) Tuned "glub" (underwater belly — pitch falls)
-    const glub = audioCtx.createOscillator();
-    glub.type = "sine";
-    glub.frequency.setValueAtTime(260, t0 + 0.02);
-    glub.frequency.exponentialRampToValueAtTime(110, t0 + 0.45);
-    const glubG = audioCtx.createGain();
-    glubG.gain.setValueAtTime(0, t0 + 0.02);
-    glubG.gain.linearRampToValueAtTime(0.18, t0 + 0.07);
-    glubG.gain.exponentialRampToValueAtTime(0.001, t0 + 0.5);
-    glub.connect(glubG).connect(audioCtx.destination);
-    glub.start(t0 + 0.02); glub.stop(t0 + 0.55);
-
-    // ---- 4) Droplet plink tail
-    const plink = audioCtx.createOscillator();
-    plink.type = "sine";
-    plink.frequency.setValueAtTime(1800, t0 + 0.55);
-    plink.frequency.exponentialRampToValueAtTime(1200, t0 + 0.8);
-    const plinkG = audioCtx.createGain();
-    plinkG.gain.setValueAtTime(0, t0 + 0.55);
-    plinkG.gain.linearRampToValueAtTime(0.08, t0 + 0.58);
-    plinkG.gain.exponentialRampToValueAtTime(0.001, t0 + 0.85);
-    plink.connect(plinkG).connect(audioCtx.destination);
-    plink.start(t0 + 0.55); plink.stop(t0 + 0.9);
   }
 
   function honk() {
