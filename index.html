@@ -105,7 +105,7 @@
     /* Pulsing SVG dot — SVG fill colors are NOT touched by browser dark-mode inverters
        (e.g. DuckDuckGo Android's force-dark) the way CSS backgrounds can be. */
     .hotspot .dot {
-      width: 56px; height: 56px;
+      width: 36px; height: 36px;
       display: block;
       animation: pulse 1.6s ease-in-out infinite;
       overflow: visible;
@@ -1149,10 +1149,10 @@
       btn.setAttribute("aria-label", z.name);
       // SVG dot — forced colors via fill attributes, resistant to browser dark-mode inverters
       btn.innerHTML = `<svg class="dot" viewBox="-28 -28 56 56" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <circle cx="0" cy="0" r="22" fill="#ffd040" fill-opacity="0.35"/>
-        <circle cx="0" cy="0" r="16" fill="#ffe870" fill-opacity="0.6"/>
-        <circle cx="0" cy="0" r="11" fill="#ffffff" stroke="#fff4a8" stroke-width="2"/>
-        <circle cx="-3" cy="-3" r="4" fill="#ffffff" fill-opacity="0.9"/>
+        <circle cx="0" cy="0" r="22" fill="#ffd040" fill-opacity="0.22"/>
+        <circle cx="0" cy="0" r="16" fill="#ffe870" fill-opacity="0.45"/>
+        <circle cx="0" cy="0" r="11" fill="#fff4a8" stroke="#ffe870" stroke-width="1.5"/>
+        <circle cx="-3" cy="-3" r="3" fill="#ffffff" fill-opacity="0.75"/>
       </svg>`;
       const lbl = document.createElement("span");
       lbl.className = "hotspot-label";
