@@ -1,12 +1,25 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light" style="color-scheme: light;">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="color-scheme" content="light" />
+  <meta name="theme-color" content="#f4e8c8" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <title>Berry Dragon's Land</title>
   <style>
+    /* =========================================================
+       FORCE LIGHT MODE (ignore device dark/high-contrast)
+       ========================================================= */
+    :root { color-scheme: light only; forced-color-adjust: none; }
+    @media (prefers-color-scheme: dark) {
+      :root { color-scheme: light only; }
+    }
+    @media (forced-colors: active) {
+      * { forced-color-adjust: none !important; }
+    }
+
     /* =========================================================
        RESET + BASE
        ========================================================= */
@@ -546,19 +559,19 @@
   window.DEV = false; // flip to true to visualize hotspots
 
   const ZONES = [
-    { id: 'house-boat',        name: 'House-boat',         x: 0.12, y: 0.05, kind: 'houseboat' },
-    { id: 'sea-of-wave',       name: 'Sea of Wave',        x: 0.22, y: 0.12, kind: 'sea' },
-    { id: 'vacation-island',   name: 'Vacation Island',    x: 0.03, y: 0.34, kind: 'vacation' },
-    { id: 'treeless-prairie',  name: 'Treeless Prairie',   x: 0.03, y: 0.60, kind: 'prairie' },
-    { id: 'fantastic-forest',  name: 'Fantastic Forest',   x: 0.23, y: 0.40, kind: 'forest' },
-    { id: 'golden-maze',       name: 'Golden Maze of Gold',x: 0.49, y: 0.28, kind: 'maze' },
-    { id: 'deserted-desert',   name: 'Deserted Desert',    x: 0.37, y: 0.53, kind: 'desert' },
-    { id: 'fog',               name: 'Fog of Misdirection',x: 0.82, y: 0.27, kind: 'fog' },
-    { id: 'dirty-path',        name: 'Dirty Path of Dirt', x: 0.62, y: 0.52, kind: 'path' },
-    { id: 'dragonberries',     name: 'Dragonberries',      x: 0.33, y: 0.65, kind: 'berries' },
-    { id: 'berry-dragon',      name: 'Berry Dragon',       x: 0.53, y: 0.75, kind: 'dragon' },
-    { id: 'quicksand',         name: 'Quicksand Pool',     x: 0.60, y: 0.88, kind: 'quicksand' },
-    { id: 'treasure-mountain', name: 'Treasure Mountain',  x: 0.85, y: 0.65, kind: 'treasure' },
+    { id: 'house-boat',        name: 'House-boat',         x: 0.14, y: 0.05, kind: 'houseboat' },
+    { id: 'sea-of-wave',       name: 'Sea of Wave',        x: 0.26, y: 0.17, kind: 'sea' },
+    { id: 'vacation-island',   name: 'Vacation Island',    x: 0.06, y: 0.47, kind: 'vacation' },
+    { id: 'treeless-prairie',  name: 'Treeless Prairie',   x: 0.09, y: 0.60, kind: 'prairie' },
+    { id: 'fantastic-forest',  name: 'Fantastic Forest',   x: 0.28, y: 0.37, kind: 'forest' },
+    { id: 'golden-maze',       name: 'Golden Maze of Gold',x: 0.50, y: 0.24, kind: 'maze' },
+    { id: 'deserted-desert',   name: 'Deserted Desert',    x: 0.37, y: 0.56, kind: 'desert' },
+    { id: 'fog',               name: 'Fog of Misdirection',x: 0.82, y: 0.30, kind: 'fog' },
+    { id: 'dirty-path',        name: 'Dirty Path of Dirt', x: 0.67, y: 0.46, kind: 'path' },
+    { id: 'dragonberries',     name: 'Dragonberries',      x: 0.44, y: 0.63, kind: 'berries' },
+    { id: 'berry-dragon',      name: 'Berry Dragon',       x: 0.60, y: 0.72, kind: 'dragon' },
+    { id: 'quicksand',         name: 'Quicksand Pool',     x: 0.66, y: 0.90, kind: 'quicksand' },
+    { id: 'treasure-mountain', name: 'Treasure Mountain',  x: 0.87, y: 0.56, kind: 'treasure' },
   ];
 
   /* =============================================================
