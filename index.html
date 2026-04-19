@@ -134,12 +134,12 @@
       position: absolute;
       top: max(16px, env(safe-area-inset-top));
       left: max(16px, env(safe-area-inset-left));
-      width: 72px; height: 72px;
+      width: 104px; height: 104px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.92);
-      border: 3px solid #333;
+      background: rgba(255,255,255,0.95);
+      border: 4px solid #333;
       color: #222;
-      font-size: 36px;
+      font-size: 56px;
       font-weight: 900;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer;
@@ -215,6 +215,112 @@
       100% { transform: scale(1) translateY(0); }
     }
 
+    /* Paper-texture cream base for polished zones — matches map vibe */
+    .paper-bg {
+      background-color: #f4e8c8;
+      background-image:
+        radial-gradient(rgba(180,140,80,0.12) 1px, transparent 1px),
+        radial-gradient(rgba(120,90,50,0.08) 1px, transparent 1px),
+        linear-gradient(135deg, #f4e8c8 0%, #ecd9a6 100%);
+      background-size: 6px 6px, 11px 11px, 100% 100%;
+      background-position: 0 0, 3px 3px, 0 0;
+    }
+
+    /* Polished-zone shared layout */
+    .pz-stage {
+      position: absolute; inset: 0;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .pz-art {
+      position: relative;
+      max-width: 90vw;
+      max-height: 85vh;
+      width: auto; height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 6px 18px rgba(60,40,20,0.35));
+      pointer-events: auto;
+      -webkit-user-drag: none;
+      user-select: none;
+    }
+    .pz-layer {
+      position: absolute;
+      pointer-events: none;
+    }
+
+    /* Fish SVG for Sea of Wave */
+    .fish {
+      position: absolute;
+      width: 60px; height: 40px;
+      pointer-events: none;
+      will-change: transform;
+    }
+    @keyframes fish-arc {
+      0%   { transform: translate(-50%, 20px) scale(0.6) rotate(-10deg); opacity: 0; }
+      15%  { transform: translate(-50%, -10px) scale(1) rotate(-20deg); opacity: 1; }
+      50%  { transform: translate(-50%, -120px) scale(1.05) rotate(5deg); opacity: 1; }
+      85%  { transform: translate(-50%, 10px) scale(1) rotate(30deg); opacity: 1; }
+      100% { transform: translate(-50%, 40px) scale(0.7) rotate(45deg); opacity: 0; }
+    }
+
+    /* Maze drawing canvas */
+    #maze-svg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: auto;
+      touch-action: none;
+    }
+    .maze-stroke {
+      fill: none;
+      stroke: url(#goldGrad);
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 6px rgba(255,210,80,0.9));
+    }
+    .maze-stroke.fading {
+      transition: opacity 1.8s ease;
+      opacity: 0;
+    }
+
+    /* Sparkle particle */
+    .spark {
+      position: absolute;
+      width: 14px; height: 14px;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+    @keyframes spark-fly {
+      0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+      100% { transform: translate(calc(-50% + var(--dx,0px)), calc(-50% + var(--dy,0px))) scale(1.1); opacity: 0; }
+    }
+
+    /* Dragon burp puff */
+    .puff {
+      position: absolute;
+      font-size: 56px;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+    @keyframes puff-rise {
+      0%   { transform: translate(-50%, 0) scale(0.4); opacity: 0; }
+      25%  { transform: translate(-50%, -20px) scale(1.1); opacity: 1; }
+      100% { transform: translate(-50%, -90px) scale(1.6); opacity: 0; }
+    }
+
+    /* Dragon smile overlay */
+    .smile-overlay {
+      position: absolute;
+      width: 40%;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      pointer-events: none;
+    }
+    .smile-overlay.show { opacity: 1; }
+
     /* Per-stub background colors */
     .bg-sea      { background: linear-gradient(to bottom, #88cfff, #1d4e8a); }
     .bg-forest   { background: linear-gradient(to bottom, #a9e4a1, #2e6b3a); }
@@ -280,16 +386,16 @@
 
   const ZONES = [
     // name,                x,     y,     emoji,   bgClass,      kind
-    { name: "Vacation Island",     x: 0.08, y: 0.45, emoji: "🏝️", bg: null,          kind: "vacation" },
-    { name: "Sea of Wave",         x: 0.27, y: 0.17, emoji: "🌊", bg: "bg-sea",      kind: "stub" },
-    { name: "Fantastic Forest",    x: 0.28, y: 0.45, emoji: "🌳", bg: "bg-forest",   kind: "stub" },
-    { name: "Deserted Desert",     x: 0.42, y: 0.55, emoji: "🏜️", bg: "bg-desert",   kind: "stub" },
-    { name: "Golden Maze of Gold", x: 0.50, y: 0.35, emoji: "🟡", bg: "bg-maze",     kind: "stub" },
-    { name: "Fog of Misdirection", x: 0.78, y: 0.33, emoji: "☁️", bg: "bg-fog",      kind: "stub" },
-    { name: "Dragonberries",       x: 0.40, y: 0.70, emoji: "🍇", bg: "bg-berries",  kind: "stub" },
-    { name: "Berry Dragon",        x: 0.52, y: 0.78, emoji: "🐉", bg: "bg-dragon",   kind: "stub" },
-    { name: "Quicksand Pool",      x: 0.58, y: 0.90, emoji: "🌀", bg: "bg-sand",     kind: "stub" },
-    { name: "Treasure Mountain",   x: 0.82, y: 0.70, emoji: "🏔️", bg: "bg-mountain", kind: "stub" },
+    { name: "Vacation Island",     x: 0.05, y: 0.33, emoji: "🏝️", bg: null,          kind: "vacation" },
+    { name: "Sea of Wave",         x: 0.16, y: 0.10, emoji: "🌊", bg: "bg-sea",      kind: "sea" },
+    { name: "Fantastic Forest",    x: 0.27, y: 0.38, emoji: "🌳", bg: "bg-forest",   kind: "stub" },
+    { name: "Golden Maze of Gold", x: 0.49, y: 0.27, emoji: "🟡", bg: "bg-maze",     kind: "maze" },
+    { name: "Deserted Desert",     x: 0.39, y: 0.55, emoji: "🏜️", bg: "bg-desert",   kind: "stub" },
+    { name: "Fog of Misdirection", x: 0.85, y: 0.32, emoji: "☁️", bg: "bg-fog",      kind: "stub" },
+    { name: "Dragonberries",       x: 0.41, y: 0.73, emoji: "🍇", bg: "bg-berries",  kind: "stub" },
+    { name: "Berry Dragon",        x: 0.57, y: 0.78, emoji: "🐉", bg: "bg-dragon",   kind: "dragon" },
+    { name: "Quicksand Pool",      x: 0.66, y: 0.93, emoji: "🌀", bg: "bg-sand",     kind: "stub" },
+    { name: "Treasure Mountain",   x: 0.85, y: 0.70, emoji: "🏔️", bg: "bg-mountain", kind: "stub" },
   ];
 
   /* =============================================================
@@ -343,16 +449,61 @@
     [1800, 2400, 3000].forEach((f, i) => tone(f, 0.15, "sine", 0.08, i * 0.04));
   }
 
-  function speak(text) {
-    if (!("speechSynthesis" in window)) return;
-    try {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.rate = 0.95;
-      u.pitch = 1.15;
-      u.volume = 1.0;
-      window.speechSynthesis.speak(u);
-    } catch (e) { /* no-op */ }
+  // Splosh: low-passed noise burst
+  function splosh() {
+    if (!audioReady || !audioCtx) return;
+    const t0 = audioCtx.currentTime;
+    const dur = 0.45;
+    const bufferSize = Math.floor(audioCtx.sampleRate * dur);
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      // Envelope: quick attack, decay
+      const env = Math.exp(-i / (bufferSize * 0.25));
+      data[i] = (Math.random() * 2 - 1) * env;
+    }
+    const src = audioCtx.createBufferSource();
+    src.buffer = buffer;
+    const lp = audioCtx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.setValueAtTime(900, t0);
+    lp.frequency.exponentialRampToValueAtTime(300, t0 + dur);
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.35, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(lp).connect(g).connect(audioCtx.destination);
+    src.start(t0);
+    // Small pitched blip on top for "splash" character
+    tone(440, 0.12, "sine", 0.08, 0.0);
+    tone(660, 0.08, "sine", 0.06, 0.05);
+  }
+
+  // Burp: short descending sawtooth wobble
+  function burp() {
+    if (!audioReady || !audioCtx) return;
+    const t0 = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(220, t0);
+    osc.frequency.exponentialRampToValueAtTime(90, t0 + 0.28);
+    const lp = audioCtx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.setValueAtTime(800, t0);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.25, t0 + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.3);
+    osc.connect(lp).connect(g).connect(audioCtx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.35);
+    // Giggle tail
+    tone(520, 0.08, "triangle", 0.08, 0.3);
+    tone(640, 0.08, "triangle", 0.08, 0.38);
+  }
+
+  function happyChord() {
+    // C major triad + octave
+    chord([523.25, 659.25, 783.99, 1046.50], 0.7, "triangle", 0.09);
   }
 
   /* =============================================================
@@ -424,12 +575,16 @@
     zoneStage.className = "";
     if (z.kind === "vacation") {
       renderVacation(zoneStage);
+    } else if (z.kind === "sea") {
+      renderSeaOfWave(zoneStage);
+    } else if (z.kind === "maze") {
+      renderGoldenMaze(zoneStage);
+    } else if (z.kind === "dragon") {
+      renderBerryDragon(zoneStage);
     } else {
       renderStub(zoneStage, z);
     }
     zoneScreen.classList.add("active");
-    // Speak name on entry
-    setTimeout(() => speak(z.name), 120);
     sparkle();
   }
 
@@ -437,7 +592,6 @@
     zoneScreen.classList.remove("active");
     zoneStage.innerHTML = "";
     zoneStage.className = "";
-    try { window.speechSynthesis.cancel(); } catch {}
   }
   backBtn.addEventListener("click", closeZone);
 
@@ -471,6 +625,218 @@
         sky.classList.add("setting");
         descendingChime();
         isUp = false;
+      }
+    });
+  }
+
+  /* =============================================================
+     HELPERS for polished zones
+     ============================================================= */
+  function sparkleBurst(parent, x, y, count = 14) {
+    const colors = ["#ffd66b", "#fff1a8", "#ffb347", "#fff"];
+    for (let i = 0; i < count; i++) {
+      const s = document.createElement("div");
+      s.className = "spark";
+      s.style.left = x + "px";
+      s.style.top = y + "px";
+      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.4;
+      const dist = 40 + Math.random() * 70;
+      s.style.setProperty("--dx", Math.cos(angle) * dist + "px");
+      s.style.setProperty("--dy", Math.sin(angle) * dist + "px");
+      s.style.background = colors[i % colors.length];
+      s.style.borderRadius = "50%";
+      s.style.boxShadow = "0 0 8px rgba(255,220,120,0.9)";
+      s.style.animation = `spark-fly ${600 + Math.random()*400}ms ease-out forwards`;
+      parent.appendChild(s);
+      setTimeout(() => s.remove(), 1100);
+    }
+    sparkle();
+  }
+
+  /* =============================================================
+     SEA OF WAVE (polished)
+     ============================================================= */
+  function renderSeaOfWave(stage) {
+    stage.className = "paper-bg";
+    const wrap = document.createElement("div");
+    wrap.className = "pz-stage";
+    wrap.innerHTML = `
+      <img class="pz-art" src="./assets/zone-sea-of-wave-web.jpg" alt="Sea of Wave" draggable="false" />
+    `;
+    stage.appendChild(wrap);
+    const img = wrap.querySelector("img");
+
+    function spawnFish(e) {
+      const rect = img.getBoundingClientRect();
+      // Tap location (fallback to random point in lower half = water)
+      let x, y;
+      if (e && e.clientX != null) {
+        x = e.clientX - rect.left;
+        y = e.clientY - rect.top;
+      } else {
+        x = rect.width * (0.2 + Math.random() * 0.6);
+        y = rect.height * (0.6 + Math.random() * 0.3);
+      }
+      // Clamp so it doesn't spawn off the art
+      x = Math.max(30, Math.min(rect.width - 30, x));
+      y = Math.max(rect.height * 0.5, Math.min(rect.height - 30, y));
+
+      const fish = document.createElement("div");
+      fish.className = "fish";
+      // Absolute position relative to wrap (same coord space as img because img is centered in flex)
+      const imgOffsetX = img.offsetLeft;
+      const imgOffsetY = img.offsetTop;
+      fish.style.left = (imgOffsetX + x) + "px";
+      fish.style.top  = (imgOffsetY + y) + "px";
+      const hue = 10 + Math.random() * 40; // orangey fish
+      fish.innerHTML = `
+        <svg viewBox="0 0 60 40" width="60" height="40">
+          <ellipse cx="24" cy="20" rx="20" ry="11" fill="hsl(${hue},85%,58%)" stroke="#6b3a10" stroke-width="2"/>
+          <polygon points="44,20 58,8 58,32" fill="hsl(${hue},80%,48%)" stroke="#6b3a10" stroke-width="2"/>
+          <circle cx="14" cy="17" r="3" fill="#fff"/>
+          <circle cx="13" cy="17" r="1.6" fill="#222"/>
+          <path d="M10 24 Q18 26 24 24" fill="none" stroke="#6b3a10" stroke-width="1.5"/>
+        </svg>
+      `;
+      fish.style.animation = `fish-arc ${900 + Math.random()*400}ms cubic-bezier(.3,.1,.5,1) forwards`;
+      wrap.appendChild(fish);
+      setTimeout(() => fish.remove(), 1500);
+      splosh();
+    }
+
+    img.addEventListener("click", spawnFish);
+  }
+
+  /* =============================================================
+     GOLDEN MAZE (polished) — draw glowing gold trail
+     ============================================================= */
+  function renderGoldenMaze(stage) {
+    stage.className = "paper-bg";
+    const wrap = document.createElement("div");
+    wrap.className = "pz-stage";
+    wrap.innerHTML = `
+      <img class="pz-art" src="./assets/zone-golden-maze-web.jpg" alt="Golden Maze of Gold" draggable="false" />
+      <svg id="maze-svg" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#fff1a8"/>
+            <stop offset="50%" stop-color="#ffd66b"/>
+            <stop offset="100%" stop-color="#c98a1f"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    `;
+    stage.appendChild(wrap);
+    const svg = wrap.querySelector("#maze-svg");
+
+    let drawing = false;
+    let pts = [];
+    let curPath = null;
+    let curLen = 0;
+
+    function getXY(e) {
+      const r = svg.getBoundingClientRect();
+      const p = e.touches ? e.touches[0] : e;
+      return { x: p.clientX - r.left, y: p.clientY - r.top };
+    }
+
+    function start(e) {
+      e.preventDefault();
+      drawing = true;
+      pts = [getXY(e)];
+      curLen = 0;
+      curPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      curPath.setAttribute("class", "maze-stroke");
+      curPath.setAttribute("d", `M ${pts[0].x} ${pts[0].y}`);
+      svg.appendChild(curPath);
+      tone(660, 0.1, "sine", 0.08);
+    }
+    function move(e) {
+      if (!drawing) return;
+      e.preventDefault();
+      const p = getXY(e);
+      const last = pts[pts.length - 1];
+      const dx = p.x - last.x, dy = p.y - last.y;
+      const d = Math.hypot(dx, dy);
+      if (d < 3) return;
+      curLen += d;
+      pts.push(p);
+      let dAttr = `M ${pts[0].x} ${pts[0].y}`;
+      for (let i = 1; i < pts.length; i++) dAttr += ` L ${pts[i].x} ${pts[i].y}`;
+      curPath.setAttribute("d", dAttr);
+    }
+    function end(e) {
+      if (!drawing) return;
+      e && e.preventDefault && e.preventDefault();
+      drawing = false;
+      const threshold = 120;
+      const last = pts[pts.length - 1];
+      const pathEl = curPath;
+      if (curLen > threshold) {
+        sparkleBurst(wrap, last.x, last.y, 18);
+        ascendingChime();
+      } else {
+        sparkleBurst(wrap, last.x, last.y, 6);
+        tone(880, 0.1, "sine", 0.08);
+      }
+      // Fade this path out
+      setTimeout(() => {
+        pathEl.classList.add("fading");
+        setTimeout(() => pathEl.remove(), 2000);
+      }, 400);
+      curPath = null;
+      pts = [];
+      curLen = 0;
+    }
+
+    svg.addEventListener("pointerdown", start);
+    svg.addEventListener("pointermove", move);
+    svg.addEventListener("pointerup", end);
+    svg.addEventListener("pointercancel", end);
+    svg.addEventListener("pointerleave", end);
+  }
+
+  /* =============================================================
+     BERRY DRAGON (polished) — tap to burp, 5 taps => smile
+     ============================================================= */
+  function renderBerryDragon(stage) {
+    stage.className = "paper-bg";
+    const wrap = document.createElement("div");
+    wrap.className = "pz-stage";
+    wrap.innerHTML = `
+      <img class="pz-art" src="./assets/zone-berry-dragon-web.jpg" alt="Berry Dragon" draggable="false" />
+      <svg class="smile-overlay" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 30 Q100 120 180 30" fill="none" stroke="#b02050" stroke-width="10" stroke-linecap="round"/>
+        <path d="M20 30 Q100 120 180 30" fill="#ffb6c8" fill-opacity="0.5" stroke="none"/>
+      </svg>
+    `;
+    stage.appendChild(wrap);
+    const img = wrap.querySelector("img");
+    const smile = wrap.querySelector(".smile-overlay");
+    let taps = 0;
+
+    img.addEventListener("click", (e) => {
+      const rect = img.getBoundingClientRect();
+      const x = (e.clientX - rect.left);
+      const y = (e.clientY - rect.top);
+      const puff = document.createElement("div");
+      puff.className = "puff";
+      puff.textContent = "☁️";
+      puff.style.left = (img.offsetLeft + x) + "px";
+      puff.style.top  = (img.offsetTop + y - 20) + "px";
+      puff.style.animation = `puff-rise ${900 + Math.random()*200}ms ease-out forwards`;
+      wrap.appendChild(puff);
+      setTimeout(() => puff.remove(), 1200);
+      burp();
+
+      taps++;
+      if (taps >= 5) {
+        taps = 0;
+        // Position smile roughly on dragon face — center of image
+        smile.classList.add("show");
+        happyChord();
+        sparkleBurst(wrap, img.offsetLeft + rect.width / 2, img.offsetTop + rect.height / 2, 20);
+        setTimeout(() => smile.classList.remove("show"), 2200);
       }
     });
   }
