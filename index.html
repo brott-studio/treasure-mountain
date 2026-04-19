@@ -1,386 +1,528 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Berry Dragon's Appetite</title>
-<style>
-  :root {
-    --bg: #1a1426;
-    --panel: #2a2038;
-    --ink: #f4ecd8;
-    --dim: #9a8fb0;
-    --accent: #ffb347;
-    --danger: #e85d5d;
-    --ok: #7ed957;
-    --berry: #c94b8c;
-    --gold: #ffd93d;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; padding: 16px;
-    background: var(--bg); color: var(--ink);
-    font-family: ui-sans-serif, system-ui, sans-serif;
-    min-height: 100vh;
-  }
-  h1 { margin: 0 0 8px; font-size: 22px; }
-  .sub { color: var(--dim); font-size: 13px; margin-bottom: 12px; }
-  .hud {
-    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
-    background: var(--panel); padding: 10px 14px; border-radius: 8px;
-    margin-bottom: 12px;
-  }
-  .stat { display: flex; align-items: center; gap: 6px; font-size: 14px; }
-  .hunger-bar {
-    width: 180px; height: 14px; background: #111; border-radius: 7px;
-    overflow: hidden; border: 1px solid #444;
-  }
-  .hunger-fill {
-    height: 100%; background: linear-gradient(90deg, var(--ok), var(--accent), var(--danger));
-    transition: width 0.3s ease;
-  }
-  button {
-    background: var(--accent); color: #1a1426; border: none;
-    padding: 6px 12px; border-radius: 6px; font-weight: 600;
-    cursor: pointer; font-size: 13px;
-  }
-  button:disabled { background: #555; color: #888; cursor: not-allowed; }
-  button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--dim); }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>Berry Dragon's Land</title>
+  <style>
+    /* =========================================================
+       RESET + BASE
+       ========================================================= */
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #1b1410;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      color: #fff;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    button { font: inherit; color: inherit; }
 
-  .map-wrap {
-    position: relative;
-    background: var(--panel);
-    border-radius: 10px;
-    padding: 12px;
-    margin-bottom: 12px;
-  }
-  svg.edges {
-    position: absolute; inset: 12px; width: calc(100% - 24px); height: calc(100% - 24px);
-    pointer-events: none;
-  }
-  .map {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(3, 110px);
-    gap: 12px;
-    position: relative;
-  }
-  .zone {
-    background: #3a2f4a;
-    border: 2px solid #4a3f5a;
-    border-radius: 8px;
-    padding: 8px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; cursor: default;
-    transition: transform 0.15s, border-color 0.15s, background 0.15s;
-    position: relative;
-    user-select: none;
-  }
-  .zone .emoji { font-size: 28px; line-height: 1; }
-  .zone .name { font-size: 11px; margin-top: 4px; color: var(--ink); font-weight: 600; }
-  .zone.reachable {
-    border-color: var(--accent);
-    background: #4a3a28;
-    cursor: pointer;
-  }
-  .zone.reachable:hover { transform: scale(1.04); }
-  .zone.current { border-color: var(--ok); box-shadow: 0 0 0 2px var(--ok); }
-  .zone.current::after {
-    content: "🧑"; position: absolute; top: -10px; right: -10px;
-    font-size: 22px; background: var(--panel); border-radius: 50%;
-    padding: 2px; border: 2px solid var(--ok);
-  }
-  .zone.key-here::before {
-    content: "🗝️"; position: absolute; top: -8px; left: -8px;
-    font-size: 18px; background: var(--panel); border-radius: 50%;
-    padding: 2px;
-  }
+    /* =========================================================
+       APP LAYOUT
+       ========================================================= */
+    #app {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
 
-  .log {
-    background: var(--panel); border-radius: 8px; padding: 10px 14px;
-    font-size: 13px; line-height: 1.5;
-  }
-  .log .entry { color: var(--dim); }
-  .log .entry.new { color: var(--ink); }
+    /* =========================================================
+       MAP SCREEN
+       ========================================================= */
+    #map-screen {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at center, #2a1f18 0%, #0e0906 100%);
+    }
+    #map-frame {
+      /* Holds the image; hotspots position against this */
+      position: relative;
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #map-img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto; height: auto;
+      object-fit: contain;
+      display: block;
+      box-shadow: 0 10px 60px rgba(0,0,0,0.6);
+      border-radius: 4px;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+    /* Hotspot container sits exactly over the rendered image */
+    #hotspots {
+      position: absolute;
+      top: 0; left: 0;
+      /* width/height set by JS to match rendered image */
+      pointer-events: none;
+    }
+    .hotspot {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      /* Big tap target */
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      pointer-events: auto;
+      background: transparent;
+      border: none;
+      padding: 0;
+    }
+    /* Tiny pulsing dot inside each hotspot */
+    .hotspot::before {
+      content: "";
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: rgba(255, 220, 100, 0.85);
+      box-shadow: 0 0 12px rgba(255, 220, 100, 0.9),
+                  0 0 24px rgba(255, 180, 60, 0.5);
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(0.9); opacity: 0.75; }
+      50%      { transform: scale(1.3); opacity: 1; }
+    }
+    /* DEV mode: show the tap target ring */
+    .hotspot-dev .hotspot {
+      background: rgba(255, 0, 255, 0.12);
+      border: 2px dashed rgba(255, 0, 255, 0.7);
+    }
+    .hotspot-dev .hotspot-label {
+      position: absolute;
+      top: 100%; left: 50%;
+      transform: translate(-50%, 4px);
+      font-size: 11px;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .hotspot-label { display: none; }
 
-  .modal-bg {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.75);
-    display: none; align-items: center; justify-content: center; z-index: 10;
-  }
-  .modal-bg.show { display: flex; }
-  .modal {
-    background: var(--panel); padding: 24px 32px; border-radius: 12px;
-    text-align: center; max-width: 360px;
-  }
-  .modal h2 { margin: 0 0 8px; }
-  .modal.win h2 { color: var(--ok); }
-  .modal.lose h2 { color: var(--danger); }
-</style>
+    /* =========================================================
+       ZONE SCREEN (overlay)
+       ========================================================= */
+    #zone-screen {
+      position: absolute; inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    #zone-screen.active { display: flex; }
+
+    #zone-stage {
+      position: relative;
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Back arrow */
+    #back-btn {
+      position: absolute;
+      top: max(16px, env(safe-area-inset-top));
+      left: max(16px, env(safe-area-inset-left));
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.92);
+      border: 3px solid #333;
+      color: #222;
+      font-size: 36px;
+      font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      animation: backPulse 2s ease-in-out infinite;
+    }
+    #back-btn:active { transform: scale(0.92); }
+    @keyframes backPulse {
+      0%, 100% { box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 0 rgba(255,255,255,0.6); }
+      50%      { box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 14px rgba(255,255,255,0); }
+    }
+
+    /* ---- Vacation Island (polished) ---- */
+    .sky {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, #ff9a5a 0%, #ffce7a 40%, #ffe9b0 70%, #f4d18c 100%);
+      transition: background 1.2s ease;
+    }
+    .sky.noon   { background: linear-gradient(to bottom, #74c6ff 0%, #b6e3ff 50%, #ffe9b0 100%); }
+    .sky.setting{ background: linear-gradient(to bottom, #ff7a3a 0%, #ff9a5a 40%, #ffc08a 80%, #6b3a6a 100%); }
+
+    .horizon {
+      position: absolute; left: 0; right: 0; bottom: 18%;
+      height: 20%;
+      background: linear-gradient(to bottom, rgba(60,30,20,0) 0%, #3a2a1f 30%, #2a1a10 100%);
+    }
+    .ocean {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      height: 18%;
+      background: linear-gradient(to bottom, #2a3a7a 0%, #1a2a5a 100%);
+    }
+
+    .sun {
+      position: absolute;
+      left: 50%;
+      width: 140px; height: 140px;
+      transform: translate(-50%, 0);
+      /* Vertical position controlled via --sun-y (0 = horizon, 1 = noon) */
+      bottom: calc(18% + (70vh * var(--sun-y, 0)) - 70px);
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffd66b 0%, #ffa54a 60%, #ff7a3a 100%);
+      box-shadow: 0 0 80px 20px rgba(255, 180, 80, 0.8),
+                  0 0 200px 60px rgba(255, 140, 50, 0.4);
+      cursor: pointer;
+      transition: bottom 1.4s cubic-bezier(.4, .0, .2, 1),
+                  background 1.4s ease,
+                  box-shadow 1.4s ease;
+    }
+    .sun.noon {
+      background: radial-gradient(circle, #ffffff 0%, #fff6c0 60%, #ffd66b 100%);
+      box-shadow: 0 0 100px 30px rgba(255, 255, 200, 0.9),
+                  0 0 260px 80px rgba(255, 240, 180, 0.5);
+    }
+    .sun:active { transform: translate(-50%, 0) scale(0.94); }
+
+    /* ---- Stub zone screen ---- */
+    .stub {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .stub-emoji {
+      font-size: clamp(140px, 38vmin, 340px);
+      cursor: pointer;
+      filter: drop-shadow(0 8px 20px rgba(0,0,0,0.5));
+      transition: transform 0.08s ease;
+    }
+    .stub-emoji.bounce { animation: bounce 0.5s ease; }
+    @keyframes bounce {
+      0%   { transform: scale(1) translateY(0); }
+      30%  { transform: scale(1.25) translateY(-30px); }
+      60%  { transform: scale(0.92) translateY(0); }
+      100% { transform: scale(1) translateY(0); }
+    }
+
+    /* Per-stub background colors */
+    .bg-sea      { background: linear-gradient(to bottom, #88cfff, #1d4e8a); }
+    .bg-forest   { background: linear-gradient(to bottom, #a9e4a1, #2e6b3a); }
+    .bg-desert   { background: linear-gradient(to bottom, #ffd89b, #c07530); }
+    .bg-maze     { background: linear-gradient(135deg, #f7d560, #b88924); }
+    .bg-fog      { background: linear-gradient(to bottom, #d8e6ff, #6b7a95); }
+    .bg-berries  { background: linear-gradient(to bottom, #cda0e6, #5a2a7a); }
+    .bg-dragon   { background: linear-gradient(to bottom, #ffb27a, #7a2a4a); }
+    .bg-sand     { background: linear-gradient(to bottom, #ffe7a0, #b87038); }
+    .bg-mountain { background: linear-gradient(to bottom, #c8d6e0, #4a6a82); }
+
+    /* =========================================================
+       LOADING + HINT
+       ========================================================= */
+    #hint {
+      position: absolute;
+      bottom: max(20px, env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.55);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      color: #fff;
+      opacity: 0.75;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #hint.hidden { opacity: 0; transition: opacity 0.6s ease; }
+
+    /* Prevent double-tap zoom jitter on iOS */
+    a, button, .hotspot, .sun, .stub-emoji { touch-action: manipulation; }
+  </style>
 </head>
 <body>
+  <div id="app">
+    <!-- ============================================
+         MAP SCREEN
+         ============================================ -->
+    <div id="map-screen">
+      <div id="map-frame">
+        <img id="map-img" src="./assets/map-web.jpg" alt="Berry Dragon's Land" />
+        <div id="hotspots"></div>
+      </div>
+      <div id="hint">✨ tap a glowing dot ✨</div>
+    </div>
 
-<h1>🐉 Berry Dragon's Appetite</h1>
-<div class="sub">Grab the Chalice Key from the Golden Maze and reach Treasure Mountain before the Dragon wakes up.</div>
-
-<div class="hud">
-  <div class="stat">
-    <span>😋 Hunger</span>
-    <div class="hunger-bar"><div class="hunger-fill" id="hungerFill"></div></div>
-    <span id="hungerText">0 / 10</span>
+    <!-- ============================================
+         ZONE SCREEN (populated dynamically)
+         ============================================ -->
+    <div id="zone-screen">
+      <button id="back-btn" aria-label="Back to map">←</button>
+      <div id="zone-stage"></div>
+    </div>
   </div>
-  <div class="stat">🫐 Berries: <strong id="berriesText">0</strong></div>
-  <div class="stat">🗝️ Key: <strong id="keyText">No</strong></div>
-  <div class="stat">🚶 Turn: <strong id="turnText">1</strong></div>
-  <button id="feedBtn">Feed Dragon 🫐→😋 (-1 hunger)</button>
-  <button id="restartBtn" class="ghost">Restart</button>
-</div>
 
-<div class="map-wrap">
-  <svg class="edges" id="edges"></svg>
-  <div class="map" id="map"></div>
-</div>
+  <script>
+  /* =============================================================
+     CONFIG — tweak hotspot positions here (normalized 0..1)
+     (0,0) = top-left of the map image, (1,1) = bottom-right.
+     ============================================================= */
+  window.DEV = false; // flip to true to visualize hotspots
 
-<div class="log" id="log"></div>
+  const ZONES = [
+    // name,                x,     y,     emoji,   bgClass,      kind
+    { name: "Vacation Island",     x: 0.08, y: 0.45, emoji: "🏝️", bg: null,          kind: "vacation" },
+    { name: "Sea of Wave",         x: 0.27, y: 0.17, emoji: "🌊", bg: "bg-sea",      kind: "stub" },
+    { name: "Fantastic Forest",    x: 0.28, y: 0.45, emoji: "🌳", bg: "bg-forest",   kind: "stub" },
+    { name: "Deserted Desert",     x: 0.42, y: 0.55, emoji: "🏜️", bg: "bg-desert",   kind: "stub" },
+    { name: "Golden Maze of Gold", x: 0.50, y: 0.35, emoji: "🟡", bg: "bg-maze",     kind: "stub" },
+    { name: "Fog of Misdirection", x: 0.78, y: 0.33, emoji: "☁️", bg: "bg-fog",      kind: "stub" },
+    { name: "Dragonberries",       x: 0.40, y: 0.70, emoji: "🍇", bg: "bg-berries",  kind: "stub" },
+    { name: "Berry Dragon",        x: 0.52, y: 0.78, emoji: "🐉", bg: "bg-dragon",   kind: "stub" },
+    { name: "Quicksand Pool",      x: 0.58, y: 0.90, emoji: "🌀", bg: "bg-sand",     kind: "stub" },
+    { name: "Treasure Mountain",   x: 0.82, y: 0.70, emoji: "🏔️", bg: "bg-mountain", kind: "stub" },
+  ];
 
-<div class="modal-bg" id="modalBg">
-  <div class="modal" id="modal">
-    <h2 id="modalTitle"></h2>
-    <p id="modalBody"></p>
-    <button onclick="init()">Play Again</button>
-  </div>
-</div>
+  /* =============================================================
+     AUDIO — Web Audio API, enabled on first user gesture
+     ============================================================= */
+  let audioCtx = null;
+  let audioReady = false;
 
-<script>
-// Zone layout on a 4x3 grid (col, row). Grid is 0-indexed.
-const ZONES = {
-  vacation:  { name: "Vacation Island",     emoji: "🏝️", col: 0, row: 0, type: "start" },
-  sea:       { name: "Sea of Wave",         emoji: "🌊", col: 1, row: 0, type: "sea" },
-  forest:    { name: "Fantastic Forest",    emoji: "🌲", col: 2, row: 0, type: "forest" },
-  fog:       { name: "Fog of Misdirection", emoji: "🌫️", col: 3, row: 0, type: "fog" },
-  berries:   { name: "Dragonberries",       emoji: "🫐", col: 0, row: 1, type: "berries" },
-  desert:    { name: "Deserted Desert",     emoji: "🏜️", col: 1, row: 1, type: "desert" },
-  quicksand: { name: "Quicksand Pool",      emoji: "🕳️", col: 2, row: 1, type: "quicksand" },
-  maze:      { name: "Golden Maze of Gold", emoji: "🌀", col: 3, row: 1, type: "maze" },
-  dragon:    { name: "Berry Dragon",        emoji: "🐉", col: 1, row: 2, type: "dragon" },
-  mountain:  { name: "Treasure Mountain",   emoji: "⛰️", col: 3, row: 2, type: "goal" },
-};
+  function enableAudio() {
+    if (audioReady) return;
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      audioReady = true;
+    } catch (e) {
+      console.warn("Audio unavailable", e);
+    }
+  }
 
-// Adjacency (undirected). Tuned so shortest win path Vacation→Maze→Mountain ≈ 6 moves.
-const EDGES = [
-  ["vacation","sea"], ["sea","forest"], ["forest","fog"],
-  ["vacation","berries"],
-  ["sea","desert"], ["forest","quicksand"], ["fog","maze"],
-  ["berries","desert"], ["desert","quicksand"], ["quicksand","maze"],
-  ["desert","dragon"], ["maze","mountain"], ["dragon","mountain"],
-];
+  function tone(freq, dur = 0.25, type = "sine", gain = 0.15, when = 0) {
+    if (!audioReady || !audioCtx) return;
+    const t0 = audioCtx.currentTime + when;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(gain, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(g).connect(audioCtx.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.05);
+  }
 
-const NEIGHBORS = {};
-for (const k of Object.keys(ZONES)) NEIGHBORS[k] = [];
-for (const [a,b] of EDGES) { NEIGHBORS[a].push(b); NEIGHBORS[b].push(a); }
+  function chord(freqs, dur = 0.4, type = "sine", gain = 0.1) {
+    freqs.forEach(f => tone(f, dur, type, gain));
+  }
 
-let state;
+  function ascendingChime() {
+    // C-E-G-C (major arpeggio, rising)
+    [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => tone(f, 0.5, "sine", 0.18, i * 0.12));
+  }
+  function descendingChime() {
+    [1046.50, 783.99, 659.25, 523.25].forEach((f, i) => tone(f, 0.5, "sine", 0.18, i * 0.12));
+  }
+  function popSound() {
+    tone(600 + Math.random() * 400, 0.15, "triangle", 0.2);
+    tone(1200, 0.08, "sine", 0.1, 0.05);
+  }
+  function sparkle() {
+    [1800, 2400, 3000].forEach((f, i) => tone(f, 0.15, "sine", 0.08, i * 0.04));
+  }
 
-function init() {
-  state = {
-    pos: "vacation",
-    hunger: 0,
-    berries: 0,
-    hasKey: false,
-    turn: 1,
-    log: [],
-    over: false,
-    visited: new Set(["vacation"]),
-  };
-  addLog("You wake on Vacation Island. The Dragon is restless.");
-  render();
-  hideModal();
-}
+  function speak(text) {
+    if (!("speechSynthesis" in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.95;
+      u.pitch = 1.15;
+      u.volume = 1.0;
+      window.speechSynthesis.speak(u);
+    } catch (e) { /* no-op */ }
+  }
 
-function addLog(msg) {
-  state.log.push(msg);
-  if (state.log.length > 5) state.log.shift();
-}
+  /* =============================================================
+     HOTSPOT LAYOUT
+     Match the overlay to the rendered (letterboxed) image rect.
+     ============================================================= */
+  const mapImg = document.getElementById("map-img");
+  const hotspotsEl = document.getElementById("hotspots");
+  const mapScreen = document.getElementById("map-screen");
 
-function move(target) {
-  if (state.over) return;
-  if (!NEIGHBORS[state.pos].includes(target)) return;
+  function layoutHotspots() {
+    if (!mapImg.complete || !mapImg.naturalWidth) return;
+    const frame = document.getElementById("map-frame");
+    const fw = frame.clientWidth, fh = frame.clientHeight;
+    const iw = mapImg.naturalWidth, ih = mapImg.naturalHeight;
+    const scale = Math.min(fw / iw, fh / ih);
+    const rw = iw * scale, rh = ih * scale;
+    const offX = (fw - rw) / 2, offY = (fh - rh) / 2;
+    hotspotsEl.style.left = offX + "px";
+    hotspotsEl.style.top = offY + "px";
+    hotspotsEl.style.width = rw + "px";
+    hotspotsEl.style.height = rh + "px";
+    // Update child positions
+    [...hotspotsEl.children].forEach(el => {
+      const idx = +el.dataset.idx;
+      const z = ZONES[idx];
+      el.style.left = (z.x * rw) + "px";
+      el.style.top  = (z.y * rh) + "px";
+    });
+  }
 
-  state.pos = target;
-  state.hunger += 1;
-  state.turn += 1;
-  const z = ZONES[target];
-  addLog(`→ Moved to ${z.name}. Hunger +1.`);
+  function buildHotspots() {
+    hotspotsEl.innerHTML = "";
+    ZONES.forEach((z, idx) => {
+      const btn = document.createElement("button");
+      btn.className = "hotspot";
+      btn.dataset.idx = idx;
+      btn.setAttribute("aria-label", z.name);
+      const lbl = document.createElement("span");
+      lbl.className = "hotspot-label";
+      lbl.textContent = z.name;
+      btn.appendChild(lbl);
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        openZone(idx);
+      });
+      hotspotsEl.appendChild(btn);
+    });
+    layoutHotspots();
+  }
 
-  // Zone effects
-  switch (z.type) {
-    case "berries":
-      state.berries += 2;
-      addLog("🫐 Gathered 2 Dragonberries.");
-      break;
-    case "forest":
-      // "draws Forest card" — random minor event
-      const roll = Math.random();
-      if (roll < 0.4) { state.berries += 1; addLog("🌲 Forest card: found 1 extra berry."); }
-      else if (roll < 0.7) { addLog("🌲 Forest card: peaceful clearing. Nothing happens."); }
-      else { state.hunger = Math.max(0, state.hunger - 1); addLog("🌲 Forest card: cool breeze, Dragon naps. Hunger -1."); }
-      break;
-    case "desert":
-      state.hunger += 1;
-      addLog("🏜️ Desert thirst! Extra hunger +1.");
-      break;
-    case "quicksand":
-      state.hunger += 1;
-      addLog("🕳️ Quicksand slows you. Hunger +1.");
-      break;
-    case "fog":
-      // Randomize: teleport to a random neighbor of fog (not fog itself)
-      const opts = NEIGHBORS["fog"].filter(x => x !== state.pos);
-      if (opts.length > 0) {
-        const dest = opts[Math.floor(Math.random() * opts.length)];
-        addLog(`🌫️ Fog scrambles you toward ${ZONES[dest].name}!`);
-        state.pos = dest;
-        // Don't re-trigger effects on the teleported-to zone to avoid chains
-      }
-      break;
-    case "maze":
-      if (!state.hasKey) {
-        state.hasKey = true;
-        addLog("🗝️ You solve the maze and claim the Chalice Key!");
+  mapImg.addEventListener("load", () => { buildHotspots(); });
+  window.addEventListener("resize", layoutHotspots);
+  window.addEventListener("orientationchange", layoutHotspots);
+  if (mapImg.complete && mapImg.naturalWidth) buildHotspots();
+
+  if (window.DEV) document.body.classList.add("hotspot-dev");
+
+  /* =============================================================
+     ZONE ROUTING
+     ============================================================= */
+  const zoneScreen = document.getElementById("zone-screen");
+  const zoneStage = document.getElementById("zone-stage");
+  const backBtn = document.getElementById("back-btn");
+
+  function openZone(idx) {
+    const z = ZONES[idx];
+    zoneStage.innerHTML = "";
+    zoneStage.className = "";
+    if (z.kind === "vacation") {
+      renderVacation(zoneStage);
+    } else {
+      renderStub(zoneStage, z);
+    }
+    zoneScreen.classList.add("active");
+    // Speak name on entry
+    setTimeout(() => speak(z.name), 120);
+    sparkle();
+  }
+
+  function closeZone() {
+    zoneScreen.classList.remove("active");
+    zoneStage.innerHTML = "";
+    zoneStage.className = "";
+    try { window.speechSynthesis.cancel(); } catch {}
+  }
+  backBtn.addEventListener("click", closeZone);
+
+  /* =============================================================
+     VACATION ISLAND (polished)
+     ============================================================= */
+  function renderVacation(stage) {
+    stage.innerHTML = `
+      <div class="sky" id="vac-sky"></div>
+      <div class="horizon"></div>
+      <div class="ocean"></div>
+      <div class="sun" id="vac-sun" style="--sun-y: 0"></div>
+    `;
+    const sky = stage.querySelector("#vac-sky");
+    const sun = stage.querySelector("#vac-sun");
+    let isUp = false;
+
+    sun.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!isUp) {
+        sun.style.setProperty("--sun-y", "1");
+        sun.classList.add("noon");
+        sky.classList.remove("setting");
+        sky.classList.add("noon");
+        ascendingChime();
+        isUp = true;
       } else {
-        addLog("🌀 The maze is empty now.");
-      }
-      break;
-    case "dragon":
-      state.hunger += 2;
-      addLog("🐉 You crept past the Dragon — it stirs! Hunger +2.");
-      break;
-    case "goal":
-      if (state.hasKey) {
-        endGame(true);
-        return;
-      } else {
-        addLog("⛰️ Treasure Mountain locked. You need the Chalice Key!");
-      }
-      break;
-  }
-
-  state.visited.add(state.pos);
-  checkLose();
-  render();
-}
-
-function feed() {
-  if (state.over) return;
-  if (state.berries <= 0) return;
-  if (state.hunger <= 0) { addLog("Dragon isn't hungry right now."); render(); return; }
-  state.berries -= 1;
-  state.hunger -= 1;
-  addLog("🫐→🐉 Fed the Dragon a berry. Hunger -1.");
-  render();
-}
-
-function checkLose() {
-  if (state.hunger >= 10) {
-    state.hunger = 10;
-    endGame(false);
-  }
-}
-
-function endGame(win) {
-  state.over = true;
-  render();
-  const modal = document.getElementById("modal");
-  modal.className = "modal " + (win ? "win" : "lose");
-  document.getElementById("modalTitle").textContent = win ? "🏆 You Win!" : "🐉 Dragon Awakens!";
-  document.getElementById("modalBody").textContent = win
-    ? `You delivered the Chalice Key to Treasure Mountain in ${state.turn} turns.`
-    : `The Dragon's hunger overwhelmed you on turn ${state.turn}. The island is devoured.`;
-  document.getElementById("modalBg").classList.add("show");
-}
-
-function hideModal() {
-  document.getElementById("modalBg").classList.remove("show");
-}
-
-function render() {
-  // HUD
-  const pct = (state.hunger / 10) * 100;
-  document.getElementById("hungerFill").style.width = pct + "%";
-  document.getElementById("hungerText").textContent = `${state.hunger} / 10`;
-  document.getElementById("berriesText").textContent = state.berries;
-  document.getElementById("keyText").textContent = state.hasKey ? "Yes 🗝️" : "No";
-  document.getElementById("turnText").textContent = state.turn;
-  document.getElementById("feedBtn").disabled = state.over || state.berries <= 0 || state.hunger <= 0;
-
-  // Map
-  const map = document.getElementById("map");
-  map.innerHTML = "";
-  const reachable = state.over ? [] : NEIGHBORS[state.pos];
-  for (const [id, z] of Object.entries(ZONES)) {
-    const el = document.createElement("div");
-    el.className = "zone";
-    el.style.gridColumn = (z.col + 1);
-    el.style.gridRow = (z.row + 1);
-    if (id === state.pos) el.classList.add("current");
-    if (reachable.includes(id)) el.classList.add("reachable");
-    if (id === "maze" && !state.hasKey) el.classList.add("key-here");
-    el.innerHTML = `<div class="emoji">${z.emoji}</div><div class="name">${z.name}</div>`;
-    if (reachable.includes(id)) el.onclick = () => move(id);
-    map.appendChild(el);
-  }
-
-  // Edges (SVG lines). Compute positions from grid cells.
-  const edgesSvg = document.getElementById("edges");
-  edgesSvg.innerHTML = "";
-  // We'll let the browser lay things out then draw edges on next frame.
-  requestAnimationFrame(() => {
-    const wrap = document.querySelector(".map-wrap");
-    const wrapRect = wrap.getBoundingClientRect();
-    edgesSvg.setAttribute("viewBox", `0 0 ${wrapRect.width} ${wrapRect.height}`);
-    edgesSvg.setAttribute("width", wrapRect.width);
-    edgesSvg.setAttribute("height", wrapRect.height);
-    edgesSvg.style.left = "0";
-    edgesSvg.style.top = "0";
-    edgesSvg.style.width = wrapRect.width + "px";
-    edgesSvg.style.height = wrapRect.height + "px";
-    edgesSvg.style.inset = "0";
-
-    const zoneEls = {};
-    map.querySelectorAll(".zone").forEach((el, i) => {
-      const name = el.querySelector(".name").textContent;
-      for (const [k, v] of Object.entries(ZONES)) {
-        if (v.name === name) zoneEls[k] = el;
+        sun.style.setProperty("--sun-y", "0");
+        sun.classList.remove("noon");
+        sky.classList.remove("noon");
+        sky.classList.add("setting");
+        descendingChime();
+        isUp = false;
       }
     });
-    for (const [a, b] of EDGES) {
-      const ra = zoneEls[a].getBoundingClientRect();
-      const rb = zoneEls[b].getBoundingClientRect();
-      const ax = ra.left + ra.width / 2 - wrapRect.left;
-      const ay = ra.top + ra.height / 2 - wrapRect.top;
-      const bx = rb.left + rb.width / 2 - wrapRect.left;
-      const by = rb.top + rb.height / 2 - wrapRect.top;
-      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      line.setAttribute("x1", ax); line.setAttribute("y1", ay);
-      line.setAttribute("x2", bx); line.setAttribute("y2", by);
-      line.setAttribute("stroke", "#5a4a70");
-      line.setAttribute("stroke-width", "2");
-      line.setAttribute("stroke-dasharray", "4 4");
-      edgesSvg.appendChild(line);
+  }
+
+  /* =============================================================
+     STUB ZONE (emoji bounce)
+     ============================================================= */
+  function renderStub(stage, zone) {
+    stage.className = zone.bg || "";
+    const wrap = document.createElement("div");
+    wrap.className = "stub";
+    const em = document.createElement("div");
+    em.className = "stub-emoji";
+    em.textContent = zone.emoji;
+    em.addEventListener("click", (e) => {
+      e.stopPropagation();
+      em.classList.remove("bounce");
+      // Force reflow to restart animation
+      void em.offsetWidth;
+      em.classList.add("bounce");
+      popSound();
+    });
+    wrap.appendChild(em);
+    stage.appendChild(wrap);
+  }
+
+  /* =============================================================
+     FIRST-TOUCH AUDIO UNLOCK + HINT DISMISS
+     ============================================================= */
+  const hint = document.getElementById("hint");
+  let firstTouch = true;
+  function onFirstTouch() {
+    enableAudio();
+    if (firstTouch) {
+      firstTouch = false;
+      if (hint) { hint.classList.add("hidden"); setTimeout(() => hint.remove(), 800); }
     }
-  });
+  }
+  ["pointerdown", "touchstart", "click"].forEach(ev =>
+    document.addEventListener(ev, onFirstTouch, { once: false, passive: true })
+  );
 
-  // Log
-  const logEl = document.getElementById("log");
-  logEl.innerHTML = state.log.map((m, i) =>
-    `<div class="entry${i === state.log.length - 1 ? ' new' : ''}">• ${m}</div>`
-  ).join("");
-}
-
-document.getElementById("feedBtn").onclick = feed;
-document.getElementById("restartBtn").onclick = init;
-window.addEventListener("resize", render);
-
-init();
-</script>
-
+  /* =============================================================
+     Safety: prevent pinch-zoom weirdness & iOS double-tap zoom
+     ============================================================= */
+  document.addEventListener("gesturestart", (e) => e.preventDefault());
+  let lastTouch = 0;
+  document.addEventListener("touchend", (e) => {
+    const now = Date.now();
+    if (now - lastTouch < 300) e.preventDefault();
+    lastTouch = now;
+  }, { passive: false });
+  </script>
 </body>
 </html>

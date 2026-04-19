@@ -1,36 +1,58 @@
-# Berry Dragon's Appetite — Paper Prototype
+# Berry Dragon's Land
 
-A 10-minute solo puzzle/tactics prototype. Single HTML file, no dependencies.
+A picture-book exploration toy for young children (5yo+).
 
-## Play
-Double-click `index.html` (or drag it into a browser tab). No build, no install.
+**Live:** https://brott-studio.github.io/berry-dragon/
 
-## Goal
-Grab the **Chalice Key** from the **Golden Maze** and reach **Treasure Mountain** before the Dragon wakes.
+## Concept (v0.2)
 
-## Rules
-- Click any **highlighted (orange-bordered)** zone adjacent to you to move there.
-- Every move: **Hunger +1**. If hunger hits **10**, the Dragon wakes → you lose.
-- **Dragonberries** zone: gain 2 berries.
-- **Feed Dragon** button: spend 1 berry to reduce hunger by 1.
-- **Golden Maze**: entering grants the Chalice Key 🗝️.
-- **Treasure Mountain**: with the Key in hand → you win.
+The homepage is the original hand-drawn treasure map. Every named zone on the map is an invisible tappable hotspot (marked with a gentle pulsing dot). Tap a zone to visit it — each zone is a tiny self-contained interaction. Tap the back arrow to return to the map.
 
-## Zone effects
-| Zone | Effect |
-|---|---|
-| 🏝️ Vacation Island | Safe start |
-| 🌊 Sea of Wave | Transit |
-| 🌲 Fantastic Forest | Random event (berry / calm / -1 hunger) |
-| 🌫️ Fog of Misdirection | Teleports you to a random neighbor |
-| 🫐 Dragonberries | +2 berries |
-| 🏜️ Deserted Desert | Hunger +1 extra |
-| 🕳️ Quicksand Pool | Hunger +1 extra |
-| 🌀 Golden Maze | Grants Chalice Key |
-| 🐉 Berry Dragon | Hunger +2 extra (risky shortcut) |
-| ⛰️ Treasure Mountain | Win if you hold the Key |
+**Design rules:**
+- No fail states. No gating. No timers. No losing.
+- All 10 zones are always accessible.
+- Zero reading required — visuals and audio only.
+- Mobile/tablet first. Big tap targets.
+- Auto-play audio unlocks on the first user tap (mobile-safe).
 
-## Typical play
-- **Fastest win path** (Vacation → Sea → Forest → Fog → Maze → Mountain): 5 moves, ~5 hunger — easy win if Fog doesn't scramble you badly.
-- **Safer path** through Berries first adds 2–3 turns but builds a feeding buffer.
-- Expect 6–8 turns in a typical playthrough.
+## Zones
+
+| # | Zone | State |
+|---|---|---|
+| 1 | Vacation Island | ✅ Polished (sun rises/sets + chime) |
+| 2 | Sea of Wave | 🟡 Stub (emoji + speech + pop) |
+| 3 | Fantastic Forest | 🟡 Stub |
+| 4 | Deserted Desert | 🟡 Stub |
+| 5 | Golden Maze of Gold | 🟡 Stub |
+| 6 | Fog of Misdirection | 🟡 Stub |
+| 7 | Dragonberries | 🟡 Stub |
+| 8 | Berry Dragon | 🟡 Stub |
+| 9 | Quicksand Pool | 🟡 Stub |
+| 10 | Treasure Mountain | 🟡 Stub |
+
+## Tech
+
+- Single `index.html`, vanilla HTML/CSS/JS, zero dependencies
+- Web Audio API for chimes and pops (no audio files)
+- SpeechSynthesis for zone name announcements
+- Images: `assets/map-original.jpg` (4032×3024, untouched) and `assets/map-web.jpg` (2000×1500, 430KB — served to web)
+
+## Tweaking hotspot positions
+
+Hotspot coordinates are normalized (0..1) and live in one place near the top of `index.html`:
+
+```js
+const ZONES = [
+  { name: "Vacation Island", x: 0.08, y: 0.45, ... },
+  ...
+];
+```
+
+To visualize hotspots (magenta dashed rings + labels), flip `window.DEV = true` at the top of the `<script>`.
+
+## Notes
+
+- `assets/map-web.jpg` is a resized copy generated via PIL; regenerate with:
+  ```
+  python3 -c "from PIL import Image; im=Image.open('assets/map-original.jpg'); im.thumbnail((2000,2000), Image.LANCZOS); im.save('assets/map-web.jpg','JPEG',quality=85,optimize=True)"
+  ```
