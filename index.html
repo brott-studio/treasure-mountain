@@ -192,24 +192,18 @@
     .sun {
       position: absolute;
       left: 50%;
-      width: 140px; height: 140px;
+      width: 110px; height: 110px;
       transform: translate(-50%, 0);
-      /* Vertical position controlled via --sun-y (0 = horizon, 1 = noon) */
-      bottom: calc(18% + (70vh * var(--sun-y, 0)) - 70px);
-      border-radius: 50%;
-      background: radial-gradient(circle, #ffd66b 0%, #ffa54a 60%, #ff7a3a 100%);
-      box-shadow: 0 0 80px 20px rgba(255, 180, 80, 0.8),
-                  0 0 200px 60px rgba(255, 140, 50, 0.4);
+      /* --sun-y: 0 = just above horizon, 1 = high in sky (~noon).
+         Horizon rect is at ~62–82% of stage height, so bottom must stay > 38% at sun-y=0. */
+      bottom: calc(42% + (38vh * var(--sun-y, 0)));
       cursor: pointer;
-      transition: bottom 1.4s cubic-bezier(.4, .0, .2, 1),
-                  background 1.4s ease,
-                  box-shadow 1.4s ease;
+      background: transparent !important;
+      border: none !important;
+      transition: bottom 1.4s cubic-bezier(.4, .0, .2, 1);
+      /* Intentionally no box-shadow: DuckDuckGo force-dark inverts CSS shadows. */
     }
-    .sun.noon {
-      background: radial-gradient(circle, #ffffff 0%, #fff6c0 60%, #ffd66b 100%);
-      box-shadow: 0 0 100px 30px rgba(255, 255, 200, 0.9),
-                  0 0 260px 80px rgba(255, 240, 180, 0.5);
-    }
+    .sun svg { width: 100%; height: 100%; display: block; overflow: visible; }
     .sun:active { transform: translate(-50%, 0) scale(0.94); }
 
     /* ---- Legacy stub (unused; kept briefly for safety) ---- */
@@ -1253,74 +1247,70 @@
      VACATION ISLAND (polished)
      ============================================================= */
   function renderVacation(stage) {
+    // All visuals rendered as SOLID-COLOR SVG primitives (no gradients, no CSS shadows).
+    // DuckDuckGo Android's force-dark inverts anything gradient-based; solid fills survive.
+    // Sky/ocean use stacked solid rects for banding; sun uses layered translucent circles.
     stage.innerHTML = `
       <div class="sky" id="vac-sky">
         <svg class="sky-svg" preserveAspectRatio="none" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <defs>
-            <linearGradient id="skyDawn" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"  stop-color="#ff9a5a"/>
-              <stop offset="40%" stop-color="#ffce7a"/>
-              <stop offset="70%" stop-color="#ffe9b0"/>
-              <stop offset="100%" stop-color="#f4d18c"/>
-            </linearGradient>
-            <linearGradient id="skyNoon" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"  stop-color="#74c6ff"/>
-              <stop offset="50%" stop-color="#b6e3ff"/>
-              <stop offset="100%" stop-color="#ffe9b0"/>
-            </linearGradient>
-            <linearGradient id="skySetting" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"  stop-color="#ff7a3a"/>
-              <stop offset="40%" stop-color="#ff9a5a"/>
-              <stop offset="80%" stop-color="#ffc08a"/>
-              <stop offset="100%" stop-color="#6b3a6a"/>
-            </linearGradient>
-            <linearGradient id="horizonGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"  stop-color="#3a2a1f" stop-opacity="0"/>
-              <stop offset="30%" stop-color="#3a2a1f"/>
-              <stop offset="100%" stop-color="#2a1a10"/>
-            </linearGradient>
-            <linearGradient id="oceanGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"  stop-color="#2a3a7a"/>
-              <stop offset="100%" stop-color="#1a2a5a"/>
-            </linearGradient>
-          </defs>
-          <rect class="layer layer-dawn"    x="0" y="0" width="100" height="100" fill="url(#skyDawn)"    opacity="1"/>
-          <rect class="layer layer-noon"    x="0" y="0" width="100" height="100" fill="url(#skyNoon)"    opacity="0"/>
-          <rect class="layer layer-setting" x="0" y="0" width="100" height="100" fill="url(#skySetting)" opacity="0"/>
-          <rect x="0" y="62" width="100" height="20" fill="url(#horizonGrad)"/>
-          <rect x="0" y="82" width="100" height="18" fill="url(#oceanGrad)"/>
+          <!-- Dawn sky: 8 stacked rects simulating a gradient with solid colors -->
+          <g class="sky-dawn" opacity="1">
+            <rect x="0" y="0"  width="100" height="12" fill="#ff8e56"/>
+            <rect x="0" y="12" width="100" height="10" fill="#ff9a5a"/>
+            <rect x="0" y="22" width="100" height="10" fill="#ffab63"/>
+            <rect x="0" y="32" width="100" height="10" fill="#ffbd72"/>
+            <rect x="0" y="42" width="100" height="10" fill="#ffcd85"/>
+            <rect x="0" y="52" width="100" height="10" fill="#ffdb9a"/>
+            <rect x="0" y="62" width="100" height="10" fill="#ffe5ac"/>
+          </g>
+          <!-- Noon sky -->
+          <g class="sky-noon" opacity="0">
+            <rect x="0" y="0"  width="100" height="12" fill="#66bdff"/>
+            <rect x="0" y="12" width="100" height="10" fill="#7ac6ff"/>
+            <rect x="0" y="22" width="100" height="10" fill="#8fd0ff"/>
+            <rect x="0" y="32" width="100" height="10" fill="#a3d9ff"/>
+            <rect x="0" y="42" width="100" height="10" fill="#b8e3ff"/>
+            <rect x="0" y="52" width="100" height="10" fill="#d4eeff"/>
+            <rect x="0" y="62" width="100" height="10" fill="#ede9c8"/>
+          </g>
+          <!-- Setting sky -->
+          <g class="sky-setting" opacity="0">
+            <rect x="0" y="0"  width="100" height="12" fill="#ff6a2a"/>
+            <rect x="0" y="12" width="100" height="10" fill="#ff7a3a"/>
+            <rect x="0" y="22" width="100" height="10" fill="#ff8b4a"/>
+            <rect x="0" y="32" width="100" height="10" fill="#ff9a5a"/>
+            <rect x="0" y="42" width="100" height="10" fill="#e8846a"/>
+            <rect x="0" y="52" width="100" height="10" fill="#a96078"/>
+            <rect x="0" y="62" width="100" height="10" fill="#7a4474"/>
+          </g>
+          <!-- Horizon land strip (solid dark brown) -->
+          <rect x="0" y="72" width="100" height="10" fill="#2f2118"/>
+          <!-- Ocean: stacked solid blues -->
+          <rect x="0" y="82" width="100" height="6" fill="#3a4d8e"/>
+          <rect x="0" y="88" width="100" height="6" fill="#2e3f7a"/>
+          <rect x="0" y="94" width="100" height="6" fill="#22326a"/>
         </svg>
       </div>
       <div class="sun" id="vac-sun" style="--sun-y: 0">
         <svg viewBox="-70 -70 140 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <defs>
-            <radialGradient id="sunGradDawn" cx="0.5" cy="0.5" r="0.5">
-              <stop offset="0%"  stop-color="#ffd66b"/>
-              <stop offset="60%" stop-color="#ffa54a"/>
-              <stop offset="100%" stop-color="#ff7a3a"/>
-            </radialGradient>
-            <radialGradient id="sunGradNoon" cx="0.5" cy="0.5" r="0.5">
-              <stop offset="0%"  stop-color="#ffffff"/>
-              <stop offset="60%" stop-color="#fff6c0"/>
-              <stop offset="100%" stop-color="#ffd66b"/>
-            </radialGradient>
-            <radialGradient id="sunHalo" cx="0.5" cy="0.5" r="0.5">
-              <stop offset="0%"  stop-color="#ffb450" stop-opacity="0.55"/>
-              <stop offset="100%" stop-color="#ffb450" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
-          <circle class="sun-halo" cx="0" cy="0" r="65" fill="url(#sunHalo)"/>
-          <circle class="sun-disc" cx="0" cy="0" r="42" fill="url(#sunGradDawn)"/>
-        </svg>
+          <!-- Layered translucent circles stack into a faux-glow without gradients. -->
+          <circle class="sun-halo-outer" cx="0" cy="0" r="60" fill="#ffb450" fill-opacity="0.14"/>
+          <circle class="sun-halo-mid"   cx="0" cy="0" r="48" fill="#ffc468" fill-opacity="0.26"/>
+          <circle class="sun-halo-near"  cx="0" cy="0" r="38" fill="#ffd077" fill-opacity="0.48"/>
+          <circle class="sun-disc"       cx="0" cy="0" r="30" fill="#ffc24a"/>
+          <circle class="sun-disc-inner" cx="0" cy="0" r="22" fill="#ffd878"/>
+          <circle class="sun-highlight"  cx="-6" cy="-6" r="10" fill="#fff5c0"/>
         </svg>
       </div>
     `;
     const sky = stage.querySelector("#vac-sky");
     const sun = stage.querySelector("#vac-sun");
-    const disc = sun.querySelector(".sun-disc");
-    const layerDawn    = sky.querySelector(".layer-dawn");
-    const layerNoon    = sky.querySelector(".layer-noon");
-    const layerSetting = sky.querySelector(".layer-setting");
+    const disc      = sun.querySelector(".sun-disc");
+    const discInner = sun.querySelector(".sun-disc-inner");
+    const highlight = sun.querySelector(".sun-highlight");
+    const skyDawn    = sky.querySelector(".sky-dawn");
+    const skyNoon    = sky.querySelector(".sky-noon");
+    const skySetting = sky.querySelector(".sky-setting");
     let isUp = false;
 
     sun.addEventListener("click", (e) => {
@@ -1328,19 +1318,23 @@
       if (!isUp) {
         sun.style.setProperty("--sun-y", "1");
         sun.classList.add("noon");
-        layerDawn.setAttribute("opacity", "0");
-        layerSetting.setAttribute("opacity", "0");
-        layerNoon.setAttribute("opacity", "1");
-        disc.setAttribute("fill", "url(#sunGradNoon)");
+        skyDawn.setAttribute("opacity", "0");
+        skySetting.setAttribute("opacity", "0");
+        skyNoon.setAttribute("opacity", "1");
+        disc.setAttribute("fill", "#fff2a8");
+        discInner.setAttribute("fill", "#ffffff");
+        highlight.setAttribute("fill", "#ffffff");
         ascendingChime();
         isUp = true;
       } else {
         sun.style.setProperty("--sun-y", "0");
         sun.classList.remove("noon");
-        layerDawn.setAttribute("opacity", "0");
-        layerNoon.setAttribute("opacity", "0");
-        layerSetting.setAttribute("opacity", "1");
-        disc.setAttribute("fill", "url(#sunGradDawn)");
+        skyDawn.setAttribute("opacity", "0");
+        skyNoon.setAttribute("opacity", "0");
+        skySetting.setAttribute("opacity", "1");
+        disc.setAttribute("fill", "#ffc24a");
+        discInner.setAttribute("fill", "#ffd878");
+        highlight.setAttribute("fill", "#fff5c0");
         descendingChime();
         isUp = false;
       }
