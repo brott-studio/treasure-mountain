@@ -1058,56 +1058,25 @@
       return `<svg viewBox="0 0 240 120" xmlns="http://www.w3.org/2000/svg">${bands}</svg>`;
     }
 
-    // Dragon hitbox: center-right ~ 45%-85% x, 30%-80% y of image
-    function inDragonBody(xRel, yRel) {
-      return xRel > 0.40 && xRel < 0.90 && yRel > 0.25 && yRel < 0.85;
-    }
-
     function handleTap(e) {
       e.stopPropagation();
       const rect = img.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      const xRel = x / rect.width;
-      const yRel = y / rect.height;
 
-      if (inDragonBody(xRel, yRel)) {
-        // Spit rainbow from tap point
-        const rb = document.createElement("div");
-        rb.className = "rainbow";
-        rb.innerHTML = rainbowSVG();
-        rb.style.left = (img.offsetLeft + x) + "px";
-        rb.style.top  = (img.offsetTop + y) + "px";
-        rb.style.animation = "rainbow-spit 1s ease-out forwards";
-        wrap.appendChild(rb);
-        setTimeout(() => rb.remove(), 1100);
-        risingWhoosh();
-        setTimeout(happyChord, 200);
-        img.classList.remove("dragon-chomp"); void img.offsetWidth;
-        img.classList.add("dragon-chomp");
-      } else {
-        // Fly a berry toward dragon mouth (center of hitbox)
-        const mouthX = rect.width * 0.65;
-        const mouthY = rect.height * 0.55;
-        const b = document.createElement("div");
-        b.className = "flying-berry";
-        const colors = ["#8e44ad","#c0392b","#2980b9","#d35400"];
-        b.style.background = colors[Math.floor(Math.random()*colors.length)];
-        b.style.left = (img.offsetLeft + x - 16) + "px";
-        b.style.top  = (img.offsetTop + y - 16) + "px";
-        b.style.transition = "transform 550ms cubic-bezier(.3,.8,.4,1), opacity 200ms ease 400ms";
-        wrap.appendChild(b);
-        requestAnimationFrame(() => {
-          b.style.transform = `translate(${mouthX - x}px, ${mouthY - y}px) scale(0.4)`;
-          b.style.opacity = "0";
-        });
-        setTimeout(() => {
-          b.remove();
-          img.classList.remove("dragon-chomp"); void img.offsetWidth;
-          img.classList.add("dragon-chomp");
-          happyPop();
-        }, 560);
-      }
+      // Any tap spits a rainbow from the tap point
+      const rb = document.createElement("div");
+      rb.className = "rainbow";
+      rb.innerHTML = rainbowSVG();
+      rb.style.left = (img.offsetLeft + x) + "px";
+      rb.style.top  = (img.offsetTop + y) + "px";
+      rb.style.animation = "rainbow-spit 1s ease-out forwards";
+      wrap.appendChild(rb);
+      setTimeout(() => rb.remove(), 1100);
+      risingWhoosh();
+      setTimeout(happyChord, 200);
+      img.classList.remove("dragon-chomp"); void img.offsetWidth;
+      img.classList.add("dragon-chomp");
     }
 
     img.addEventListener("click", handleTap);
