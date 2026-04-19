@@ -1679,8 +1679,19 @@
       }
     }
 
-    if (img.complete) populateBlades();
-    else img.addEventListener("load", populateBlades, { once: true });
+    function tryPopulate() {
+      // On subsequent visits, the img is newly created but cached — img.complete is true
+      // immediately, yet clientWidth may still be 0 until layout happens. Retry via rAF
+      // until we actually have dimensions.
+      if (!sizeCanvas()) {
+        requestAnimationFrame(tryPopulate);
+        return;
+      }
+      populateBlades();
+    }
+
+    if (img.complete && img.naturalWidth > 0) tryPopulate();
+    else img.addEventListener("load", tryPopulate, { once: true });
     let resizeT;
     const onResize = () => { clearTimeout(resizeT); resizeT = setTimeout(populateBlades, 200); };
     window.addEventListener("resize", onResize);
