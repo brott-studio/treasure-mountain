@@ -643,15 +643,15 @@
       position: absolute;
       transform: translate(-50%, 40px) scale(0.3);
       opacity: 0;
-      width: 108px;
-      height: 108px;
+      width: 180px;
+      height: auto;
       cursor: pointer;
-      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.45));
+      filter: drop-shadow(0 8px 14px rgba(0,0,0,0.45));
       z-index: 6;
       pointer-events: auto;
       transition: transform 500ms cubic-bezier(.2,1.4,.4,1), opacity 300ms ease-out;
     }
-    .treasure-chest svg { width: 100%; height: 100%; display: block; }
+    .treasure-chest img { width: 100%; height: auto; display: block; pointer-events: none; }
     .treasure-chest.risen {
       transform: translate(-50%, -50%) scale(1);
       opacity: 1;
@@ -1991,41 +1991,7 @@
       setTimeout(() => {
         chest = document.createElement("div");
         chest.className = "treasure-chest";
-        // Proper treasure chest SVG: wooden chest with iron bands + gold latch + spilling coins
-        chest.innerHTML = `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="woodL" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#a8722e"/>
-              <stop offset="100%" stop-color="#6a4418"/>
-            </linearGradient>
-            <linearGradient id="lidL" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#c08a3e"/>
-              <stop offset="100%" stop-color="#7a4e1b"/>
-            </linearGradient>
-            <radialGradient id="goldL" cx="50%" cy="40%" r="60%">
-              <stop offset="0%" stop-color="#fff5c2"/>
-              <stop offset="100%" stop-color="#d9a317"/>
-            </radialGradient>
-          </defs>
-          <rect x="18" y="58" width="84" height="44" rx="4" fill="url(#woodL)" stroke="#3f2710" stroke-width="2.5"/>
-          <line x1="40" y1="58" x2="40" y2="102" stroke="#3f2710" stroke-width="1.2" opacity="0.6"/>
-          <line x1="60" y1="58" x2="60" y2="102" stroke="#3f2710" stroke-width="1.2" opacity="0.6"/>
-          <line x1="80" y1="58" x2="80" y2="102" stroke="#3f2710" stroke-width="1.2" opacity="0.6"/>
-          <rect x="16" y="64" width="88" height="5" fill="#3a3028" stroke="#1a1410" stroke-width="0.8"/>
-          <rect x="16" y="92" width="88" height="5" fill="#3a3028" stroke="#1a1410" stroke-width="0.8"/>
-          <path d="M 14 58 Q 60 26 106 58 Q 106 50 60 22 Q 14 50 14 58 Z" fill="url(#lidL)" stroke="#3f2710" stroke-width="2.5"/>
-          <path d="M 20 50 Q 60 28 100 50" fill="none" stroke="#3a3028" stroke-width="4" stroke-linecap="round"/>
-          <ellipse cx="60" cy="62" rx="34" ry="6" fill="#fff5c2" opacity="0.8"/>
-          <g fill="url(#goldL)" stroke="#8a5f0a" stroke-width="1">
-            <circle cx="40" cy="60" r="6"/>
-            <circle cx="60" cy="58" r="7"/>
-            <circle cx="78" cy="61" r="6"/>
-            <circle cx="50" cy="64" r="5"/>
-            <circle cx="70" cy="65" r="5"/>
-          </g>
-          <rect x="55" y="70" width="10" height="12" fill="#f0c040" stroke="#6a4a0a" stroke-width="1.2"/>
-          <circle cx="60" cy="76" r="1.8" fill="#3a2608"/>
-        </svg>`;
+        chest.innerHTML = `<img src="assets/treasure-chest.png" alt="treasure chest"/>`;
         chest.style.left = xLeft + "px";
         chest.style.top  = xTop + "px";
         wrap.appendChild(chest);
