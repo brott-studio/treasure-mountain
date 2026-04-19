@@ -387,6 +387,19 @@
       100% { transform: translate(-50%, 40px) scale(0.5); opacity: 0; }
     }
 
+    /* Desert tumbleweed */
+    .tumbleweed {
+      position: absolute;
+      font-size: 56px;
+      pointer-events: none;
+      filter: drop-shadow(0 4px 6px rgba(80,60,20,0.45));
+      will-change: transform;
+    }
+    @keyframes tumble-roll {
+      0%   { transform: translate(0,0) rotate(0deg); }
+      100% { transform: translate(var(--tx, 120vw), var(--ty, -20px)) rotate(var(--tr, 1440deg)); }
+    }
+
     /* Desert treasure pops */
     .treasure-pop {
       position: absolute;
@@ -687,6 +700,31 @@
     // Bigger major-7 flourish
     [523.25, 659.25, 783.99, 987.77, 1318.51].forEach((f, i) =>
       tone(f, 0.8, "triangle", 0.1, i * 0.08));
+  }
+
+  function windGust() {
+    // Dry wind: band-passed noise that rises then falls
+    if (!audioReady || !audioCtx) return;
+    const t0 = audioCtx.currentTime;
+    const dur = 1.6;
+    const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * dur), audioCtx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    const bp = audioCtx.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.frequency.setValueAtTime(400, t0);
+    bp.frequency.linearRampToValueAtTime(1200, t0 + dur * 0.5);
+    bp.frequency.linearRampToValueAtTime(350, t0 + dur);
+    bp.Q.setValueAtTime(1.2, t0);
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.18, t0 + 0.35);
+    g.gain.linearRampToValueAtTime(0.14, t0 + dur * 0.6);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    src.connect(bp).connect(g).connect(audioCtx.destination);
+    src.start(t0); src.stop(t0 + dur);
   }
 
   function waterLap() {
@@ -1236,18 +1274,26 @@
   /* ---- Deserted Desert ---- */
   function renderDesert(stage) {
     const { wrap, img } = mkStage(stage, "deserted-desert");
-    const items = ["🪙","🦴","💎","🗝️"];
     img.addEventListener("click", (e) => {
       const { x, y } = relTapXY(img, e);
-      const t = document.createElement("div");
-      t.className = "treasure-pop";
-      t.textContent = items[Math.floor(Math.random()*items.length)];
-      t.style.left = (img.offsetLeft + x) + "px";
-      t.style.top  = (img.offsetTop + y) + "px";
-      t.style.animation = "pop-float 1.3s ease-out forwards";
-      wrap.appendChild(t);
-      setTimeout(() => t.remove(), 1400);
-      ascendingChime();
+      // Roll a tumbleweed across the image from the tap point to the opposite side
+      const tw = document.createElement("div");
+      tw.className = "tumbleweed";
+      tw.textContent = "🌿";
+      // Start from left side of stage if tap is on right half, else from right side
+      const fromLeft = x > img.width / 2;
+      const startX = fromLeft ? -80 : img.width + 80;
+      const endX   = fromLeft ? img.width + 80 : -80;
+      const baseY  = img.offsetTop + Math.min(img.height * 0.7, y + 40);
+      tw.style.left = (img.offsetLeft + startX) + "px";
+      tw.style.top  = baseY + "px";
+      tw.style.setProperty("--tx", (endX - startX) + "px");
+      tw.style.setProperty("--ty", (-8 - Math.random() * 12) + "px");
+      tw.style.setProperty("--tr", (fromLeft ? 1 : -1) * (1080 + Math.random() * 720) + "deg");
+      tw.style.animation = "tumble-roll 2400ms linear forwards";
+      wrap.appendChild(tw);
+      setTimeout(() => tw.remove(), 2500);
+      windGust();
     });
   }
 
