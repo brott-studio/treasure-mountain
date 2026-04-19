@@ -101,12 +101,14 @@
     /* Tiny pulsing dot inside each hotspot */
     .hotspot::before {
       content: "";
-      width: 20px; height: 20px;
+      width: 22px; height: 22px;
       border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, #ffffff 0%, #fff5b0 55%, #ffd04a 100%);
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.95),
-                  0 0 22px rgba(255, 235, 130, 0.85),
-                  0 0 40px rgba(255, 200, 60, 0.5);
+      background-color: #fff4a8;
+      box-shadow:
+        0 0 0 3px rgba(255, 255, 255, 0.95),
+        0 0 14px rgba(255, 240, 150, 1),
+        0 0 28px rgba(255, 200, 60, 0.9),
+        0 0 48px rgba(255, 180, 40, 0.55);
       animation: pulse 1.6s ease-in-out infinite;
     }
     @keyframes pulse {
